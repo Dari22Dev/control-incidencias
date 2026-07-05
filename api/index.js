@@ -158,3 +158,5 @@ app.delete('/api/cortes/:id', requireAuth, async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor en memoria corriendo en puerto ${PORT}`);
 });
+
+export default app;
