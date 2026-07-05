@@ -10,11 +10,12 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json({ limit: '50mb' }));
 
-// --- ALMACENAMIENTO TEMPORAL EN MEMORIA ---
+// --- ALMACENAMIENTO TEMPORAL EN MEMORIA (RAM) ---
+let ID_CORTE_COUNTER = 1;
+let ID_INCIDENCIA_COUNTER = 1;
+
 let tablaCortes = [];
 let tablaIncidencias = [];
-let nextCorteId = 1;
-let nextIncidenciaId = 1;
 
 // --- AUTENTICACIÓN Y SEGURIDAD ---
 const MASTER_USER = 'Daridev';
@@ -41,7 +42,7 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// --- RUTAS DE LA API (PROTEGIDAS) ---
+// --- RUTAS DE LA API (MOCK CON ARRAYS) ---
 
 // Guardar un nuevo corte y sus registros
 app.post('/api/cortes', requireAuth, async (req, res) => {
@@ -52,46 +53,43 @@ app.post('/api/cortes', requireAuth, async (req, res) => {
   }
 
   try {
+    const corteId = ID_CORTE_COUNTER++;
+
+    // Crear el registro del corte simulando SQLite
     const nuevoCorte = {
-      id: nextCorteId++,
+      id: corteId,
       filename: filename || 'Cálculo Manual',
-      year: parseInt(year, 10),
-      month: parseInt(month, 10),
-      quincena: parseInt(quincena, 10),
+      year: parseInt(year),
+      month: parseInt(month),
+      quincena: parseInt(quincena),
       feriados: JSON.stringify(feriados || []),
       created_at: new Date().toISOString()
     };
-
     tablaCortes.push(nuevoCorte);
 
-    // Aplanar las incidencias de todas las sucursales
-    const flatIncidencias = [];
+    // Aplanar e insertar las incidencias en el arreglo global
     Object.keys(incidencias).forEach((sucursal) => {
       if (Array.isArray(incidencias[sucursal])) {
         incidencias[sucursal].forEach((item) => {
-          flatIncidencias.push({ sucursal, ...item });
+          tablaIncidencias.push({
+            id: ID_INCIDENCIA_COUNTER++,
+            corte_id: corteId,
+            employeeCode: item.employeeCode,
+            employeeName: item.employeeName,
+            cedula: item.cedula,
+            cargo: item.cargo,
+            originalSucursal: item.originalSucursal,
+            mappedSucursal: sucursal,
+            incidenceType: item.incidenceType,
+            value: item.value,
+            dateString: item.dateString,
+            originalStatus: item.originalStatus
+          });
         });
       }
     });
 
-    for (const item of flatIncidencias) {
-      tablaIncidencias.push({
-        id: nextIncidenciaId++,
-        corte_id: nuevoCorte.id,
-        employeeCode: item.employeeCode,
-        employeeName: item.employeeName,
-        cedula: item.cedula,
-        cargo: item.cargo,
-        originalSucursal: item.originalSucursal,
-        mappedSucursal: item.sucursal,
-        incidenceType: item.incidenceType,
-        value: item.value,
-        dateString: item.dateString,
-        originalStatus: item.originalStatus
-      });
-    }
-
-    res.status(201).json({ success: true, id: nuevoCorte.id });
+    res.status(201).json({ success: true, id: corteId });
   } catch (err) {
     console.error('Error al guardar corte:', err);
     res.status(500).json({ error: 'Error interno al guardar los registros: ' + err.message });
@@ -101,21 +99,17 @@ app.post('/api/cortes', requireAuth, async (req, res) => {
 // Obtener todos los cortes históricos (resumen)
 app.get('/api/cortes', requireAuth, async (req, res) => {
   try {
-    const result = tablaCortes.map(c => {
-      const total_registros = tablaIncidencias.filter(inc => inc.corte_id === c.id).length;
+    // Mapeamos los cortes y calculamos el total de registros en memoria
+    const formattedRows = tablaCortes.map(corte => {
+      const totalRegistros = tablaIncidencias.filter(inc => inc.corte_id === corte.id).length;
       return {
-        id: c.id,
-        filename: c.filename,
-        year: c.year,
-        month: c.month,
-        quincena: c.quincena,
-        feriados: JSON.parse(c.feriados || '[]'),
-        created_at: c.created_at,
-        total_registros
+        ...corte,
+        total_registros: totalRegistros,
+        feriados: JSON.parse(corte.feriados || '[]')
       };
-    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Orden descendente por fecha
 
-    res.json(result);
+    res.json(formattedRows);
   } catch (err) {
     console.error('Error al obtener historial:', err);
     res.status(500).json({ error: 'Error al obtener el historial: ' + err.message });
@@ -126,37 +120,33 @@ app.get('/api/cortes', requireAuth, async (req, res) => {
 app.get('/api/cortes/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   try {
-    const idInt = parseInt(id, 10);
-    const corte = tablaCortes.find(c => c.id === idInt);
+    const corte = tablaCortes.find(c => c.id === parseInt(id));
     if (!corte) {
       return res.status(404).json({ error: 'Registro de corte no encontrado.' });
     }
 
-    const responseCorte = {
-      id: corte.id,
-      filename: corte.filename,
-      year: corte.year,
-      month: corte.month,
-      quincena: corte.quincena,
-      feriados: JSON.parse(corte.feriados || '[]'),
-      created_at: corte.created_at
-    };
+    const copiaCorte = { ...corte };
+    copiaCorte.feriados = JSON.parse(copiaCorte.feriados || '[]');
 
-    const incidencias = tablaIncidencias.filter(inc => inc.corte_id === idInt);
-    res.json({ ...responseCorte, incidencias });
+    const incidenciasFiltradas = tablaIncidencias.filter(inc => inc.corte_id === parseInt(id));
+
+    res.json({ ...copiaCorte, incidencias: incidenciasFiltradas });
   } catch (err) {
     console.error('Error al obtener detalles del corte:', err);
     res.status(500).json({ error: 'Error al obtener los detalles del corte: ' + err.message });
   }
 });
 
-// Eliminar un corte histórico
+// Eliminar un corte histórico (Simula ON DELETE CASCADE)
 app.delete('/api/cortes/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   try {
-    const idInt = parseInt(id, 10);
-    tablaCortes = tablaCortes.filter(c => c.id !== idInt);
-    tablaIncidencias = tablaIncidencias.filter(inc => inc.corte_id !== idInt);
+    const corteIdInt = parseInt(id);
+    // Eliminar el corte
+    tablaCortes = tablaCortes.filter(c => c.id !== corteIdInt);
+    // Eliminar sus incidencias asociadas
+    tablaIncidencias = tablaIncidencias.filter(inc => inc.corte_id !== corteIdInt);
+
     res.json({ success: true });
   } catch (err) {
     console.error('Error al eliminar corte:', err);
@@ -177,4 +167,3 @@ app.listen(PORT, () => {
   console.log(`Servidor en memoria corriendo en puerto ${PORT}`);
 });
 
-export default app;
