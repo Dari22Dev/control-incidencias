@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx-js-style';
 import {
   Upload,
@@ -20,6 +20,112 @@ const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
+
+// Componente Personalizado Dropdown Moderno con Efecto de Desenfoque y Vidrio
+function CustomDropdown({ label, value, options, onChange, disabled }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="config-group" style={{ marginBottom: 0, position: 'relative' }} ref={dropdownRef}>
+      <label style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'block', marginBottom: '0.35rem' }}>{label}</label>
+      
+      {/* Trigger Box */}
+      <div
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        style={{
+          width: '100%',
+          background: disabled ? 'rgba(15, 23, 42, 0.4)' : 'rgba(15, 23, 42, 0.8)',
+          border: '1px solid var(--border-glass)',
+          borderRadius: '10px',
+          padding: '0.75rem 1rem',
+          color: '#ffffff',
+          fontFamily: 'inherit',
+          fontSize: '0.9rem',
+          outline: 'none',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          userSelect: 'none',
+          transition: 'all 0.3s'
+        }}
+        className={!disabled ? 'custom-dropdown-trigger' : ''}
+      >
+        <span>{selectedOption ? selectedOption.label : ''}</span>
+        <span style={{ 
+          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
+          transition: 'transform 0.2s ease', 
+          display: 'flex', 
+          alignItems: 'center', 
+          color: '#94a3b8',
+          fontSize: '0.65rem'
+        }}>
+          ▼
+        </span>
+      </div>
+
+      {/* Dropdown Options Box */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 5px)',
+            left: 0,
+            width: '100%',
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid var(--border-glass)',
+            borderRadius: '10px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+            zIndex: 1000,
+            maxHeight: '220px',
+            overflowY: 'auto',
+            padding: '0.35rem 0'
+          }}
+          className="custom-dropdown-menu"
+        >
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              style={{
+                padding: '0.6rem 1rem',
+                color: opt.value === value ? 'var(--secondary)' : '#ffffff',
+                background: opt.value === value ? 'rgba(6, 182, 212, 0.1)' : 'transparent',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                fontWeight: opt.value === value ? '600' : '400'
+              }}
+              className="custom-dropdown-item"
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function App() {
   const today = new Date();
@@ -938,55 +1044,23 @@ function App() {
                   }}
                 />
               </div>
-              <div className="config-group" style={{ marginBottom: 0 }}>
-                <label style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'block', marginBottom: '0.35rem' }}>Mes</label>
-                <select
-                  className="input-select"
-                  value={month}
-                  onChange={(e) => setMonth(parseInt(e.target.value, 10))}
-                  disabled={viewingHistoryId !== null}
-                  style={{
-                    width: '100%',
-                    background: viewingHistoryId !== null ? 'rgba(15, 23, 42, 0.4)' : 'rgba(15, 23, 42, 0.8)',
-                    border: '1px solid var(--border-glass)',
-                    borderRadius: '10px',
-                    padding: '0.75rem 1rem',
-                    color: '#ffffff',
-                    fontFamily: 'inherit',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    cursor: viewingHistoryId !== null ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  {MONTH_NAMES.map((name, idx) => (
-                    <option key={idx} value={idx}>{name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="config-group" style={{ marginBottom: 0 }}>
-                <label style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'block', marginBottom: '0.35rem' }}>Quincena</label>
-                <select
-                  className="input-select"
-                  value={quincena}
-                  onChange={(e) => setQuincena(parseInt(e.target.value, 10))}
-                  disabled={viewingHistoryId !== null}
-                  style={{
-                    width: '100%',
-                    background: viewingHistoryId !== null ? 'rgba(15, 23, 42, 0.4)' : 'rgba(15, 23, 42, 0.8)',
-                    border: '1px solid var(--border-glass)',
-                    borderRadius: '10px',
-                    padding: '0.75rem 1rem',
-                    color: '#ffffff',
-                    fontFamily: 'inherit',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    cursor: viewingHistoryId !== null ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  <option value={1}>1ra Quincena (01 al 15)</option>
-                  <option value={2}>2da Quincena (16 al 30/31)</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Mes"
+                value={month}
+                onChange={setMonth}
+                disabled={viewingHistoryId !== null}
+                options={MONTH_NAMES.map((name, idx) => ({ value: idx, label: name }))}
+              />
+              <CustomDropdown
+                label="Quincena"
+                value={quincena}
+                onChange={setQuincena}
+                disabled={viewingHistoryId !== null}
+                options={[
+                  { value: 1, label: '1ra Quincena (01 al 15)' },
+                  { value: 2, label: '2da Quincena (16 al 30/31)' }
+                ]}
+              />
             </div>
           </div>
 
