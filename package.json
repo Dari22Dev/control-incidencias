@@ -16,7 +16,6 @@
     "lucide-react": "^1.23.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "sqlite3": "^6.0.1",
     "xlsx": "^0.18.5",
     "xlsx-js-style": "^1.2.0"
   },
