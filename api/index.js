@@ -107,7 +107,7 @@ app.get('/api/cortes', requireAuth, async (req, res) => {
         total_registros: totalRegistros,
         feriados: JSON.parse(corte.feriados || '[]')
       };
-    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Orden descendente por fecha
+    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     res.json(formattedRows);
   } catch (err) {
@@ -154,16 +154,7 @@ app.delete('/api/cortes/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Servir archivos estáticos del frontend
-app.use(express.static(path.join(__dirname, 'dist')));
-
-// Redirigir cualquier otra petición no-API al index.html del frontend
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor en memoria corriendo en puerto ${PORT}`);
 });
-
