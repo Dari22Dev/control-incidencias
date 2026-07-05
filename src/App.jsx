@@ -14,7 +14,7 @@ import {
   ShieldAlert,
   Info
 } from 'lucide-react';
-import { processIncidencias, isWorkedStatus, getLocalISODate } from './utils/calculator';
+import { processIncidencias } from './utils/calculator';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -124,6 +124,71 @@ function CustomDropdown({ label, value, options, onChange, disabled }) {
         </div>
       )}
     </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer style={{
+      marginTop: 'auto',
+      background: 'var(--bg-glass)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      border: '1px solid var(--border-glass)',
+      borderRadius: '20px',
+      padding: '1.25rem 2rem',
+      boxShadow: 'var(--glass-shadow)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: '1rem',
+      width: '100%',
+      animation: 'fadeIn 0.5s ease',
+      position: 'relative',
+      zIndex: 10
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+          Desarrollado por <strong style={{ color: '#ffffff', fontWeight: '600' }}>DariDev</strong> &copy; 2026
+        </span>
+        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+          Control de Incidencias • Versión 1
+        </span>
+      </div>
+      
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Contacto:</span>
+        <a
+          href="https://wa.me/584161978651"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '10px',
+            background: 'rgba(37, 211, 102, 0.1)',
+            border: '1px solid rgba(37, 211, 102, 0.2)',
+            color: '#25D366',
+            textDecoration: 'none',
+            fontSize: '0.85rem',
+            fontWeight: '600',
+            transition: 'all 0.3s ease'
+          }}
+          className="whatsapp-contact-link"
+        >
+          <svg
+            style={{ width: '16px', height: '16px', fill: 'currentColor' }}
+            viewBox="0 0 24 24"
+          >
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.968C16.63 1.97 14.152.946 11.517.946c-5.44 0-9.866 4.372-9.87 9.802 0 1.814.48 3.59 1.39 5.169l-.95 3.473 3.56-.934zM16.621 13.568c-.27-.135-1.597-.788-1.848-.88-.25-.091-.433-.135-.615.135-.183.27-.707.88-.867 1.062-.16.183-.32.203-.59.068-1.523-.762-2.482-1.282-3.44-2.933-.254-.438.254-.407.727-1.353.079-.162.04-.304-.02-.439-.06-.135-.513-1.233-.7-1.69-.183-.448-.37-.387-.514-.395-.133-.007-.285-.008-.438-.008-.153 0-.402.058-.613.286-.212.228-.809.79-.809 1.927 0 1.137.828 2.235.942 2.387.114.152 1.63 2.49 3.95 3.49.55.237 1.002.39 1.343.498.552.176 1.053.151 1.448.092.44-.066 1.353-.553 1.543-1.085.19-.53.19-.986.133-1.082-.057-.096-.212-.152-.482-.288z"/>
+          </svg>
+          <span>+584161978651</span>
+        </a>
+      </div>
+    </footer>
   );
 }
 
@@ -789,6 +854,8 @@ function App() {
           </form>
         </div>
 
+        <Footer />
+
         <div className="toast-container">
           {toasts.map(toast => (
             <div key={toast.id} className={`toast toast-${toast.type}`}>
@@ -1444,6 +1511,8 @@ function App() {
         </div>
       </div>
       )}
+
+      <Footer />
 
       {/* Floating Toast Notification Area */}
       <div className="toast-container">

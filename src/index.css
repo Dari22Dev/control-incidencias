@@ -869,3 +869,15 @@ td {
     transform: translateY(0) scaleY(1);
   }
 }
+
+.whatsapp-contact-link {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.whatsapp-contact-link:hover {
+  background: rgba(37, 211, 102, 0.2) !important;
+  border-color: rgba(37, 211, 102, 0.5) !important;
+  box-shadow: 0 0 12px rgba(37, 211, 102, 0.3);
+  transform: translateY(-1px);
+}
+
