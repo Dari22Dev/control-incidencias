@@ -883,35 +883,290 @@ td {
 
 .light-theme {
   color-scheme: light;
-  color: #334155;
-  background-color: #f8fafc;
+  color: #1e293b;
+  background-color: #f0f0ff;
 
-  --bg-gradient: radial-gradient(circle at 50% 50%, #eff6ff 0%, #f8fafc 100%);
+  --bg-gradient: radial-gradient(circle at 50% 50%, #ede9fe 0%, #f0f0ff 100%);
   --primary: #7c3aed;
-  --primary-glow: rgba(124, 58, 237, 0.15);
+  --primary-glow: rgba(124, 58, 237, 0.2);
   --secondary: #0891b2;
-  --secondary-glow: rgba(8, 145, 178, 0.15);
+  --secondary-glow: rgba(8, 145, 178, 0.2);
   
-  --bg-glass: rgba(255, 255, 255, 0.7);
-  --border-glass: rgba(15, 23, 42, 0.08);
-  --border-glass-focus: rgba(15, 23, 42, 0.15);
-  --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.06);
+  --bg-glass: rgba(255, 255, 255, 0.75);
+  --border-glass: rgba(124, 58, 237, 0.1);
+  --border-glass-focus: rgba(124, 58, 237, 0.25);
+  --glass-shadow: 0 8px 32px 0 rgba(124, 58, 237, 0.06);
 
-  --title-gradient: linear-gradient(90deg, #0f172a, #475569);
-  --bg-input: rgba(255, 255, 255, 0.9);
-  --color-input: #0f172a;
-  --bg-thead: rgba(241, 245, 249, 0.95);
+  --title-gradient: linear-gradient(90deg, #1e1b4b, #4c1d95);
+  --bg-input: rgba(238, 235, 255, 0.7);
+  --color-input: #1e1b4b;
+  --bg-thead: rgba(237, 233, 254, 0.95);
   --bg-dropdown: rgba(255, 255, 255, 0.98);
-  --text-dropdown: #0f172a;
-  --bg-feriados-box: rgba(15, 23, 42, 0.05);
-  --table-hover: rgba(15, 23, 42, 0.02);
-  --orb-opacity: 0.12;
-  --card-title-color: #0f172a;
+  --text-dropdown: #1e1b4b;
+  --bg-feriados-box: rgba(124, 58, 237, 0.04);
+  --table-hover: rgba(124, 58, 237, 0.03);
+  --orb-opacity: 0.15;
+  --card-title-color: #1e1b4b;
   --text-td: #334155;
 
-  --btn-secondary-bg: rgba(15, 23, 42, 0.05);
-  --btn-secondary-color: #0f172a;
+  --btn-secondary-bg: rgba(124, 58, 237, 0.06);
+  --btn-secondary-color: #1e1b4b;
+
+  /* Feriado colors - purple instead of yellow */
+  --color-feriado: #7c3aed;
 }
+
+/* ===== Light Theme Overrides ===== */
+
+/* Body & Scrollbar */
+.light-theme * {
+  scrollbar-color: rgba(124, 58, 237, 0.2) transparent;
+}
+
+/* Header subtitle */
+.light-theme .header-title p {
+  color: #475569;
+}
+
+/* Glass card hover */
+.light-theme .glass-card:hover {
+  border-color: rgba(124, 58, 237, 0.15);
+}
+
+/* Config group labels */
+.light-theme .config-group label {
+  color: #475569;
+}
+
+/* Dropzone */
+.light-theme .dropzone {
+  border-color: rgba(124, 58, 237, 0.2);
+  background: rgba(124, 58, 237, 0.02);
+}
+
+.light-theme .dropzone:hover,
+.light-theme .dropzone.active {
+  border-color: var(--primary);
+  background: rgba(124, 58, 237, 0.06);
+}
+
+.light-theme .dropzone-icon {
+  color: #475569;
+  background: rgba(124, 58, 237, 0.06);
+}
+
+.light-theme .dropzone:hover .dropzone-icon {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.light-theme .dropzone-text p {
+  color: #64748b;
+}
+
+/* File loaded panel */
+.light-theme .file-loaded-panel {
+  background: rgba(124, 58, 237, 0.03);
+}
+
+.light-theme .file-details p {
+  color: #64748b;
+}
+
+.light-theme .btn-remove-file {
+  color: #64748b;
+}
+
+/* Tabs container */
+.light-theme .tabs-container {
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.light-theme .tab-btn {
+  color: #475569;
+}
+
+.light-theme .tab-btn:hover {
+  color: #1e1b4b;
+  background: rgba(124, 58, 237, 0.06);
+}
+
+.light-theme .tab-btn.active {
+  color: #ffffff;
+}
+
+/* Sucursal tabs */
+.light-theme .sucursal-tab {
+  color: #475569;
+}
+
+.light-theme .sucursal-tab:hover {
+  color: #1e1b4b;
+}
+
+/* Table */
+.light-theme th {
+  color: #475569;
+}
+
+.light-theme tbody tr {
+  border-bottom-color: rgba(124, 58, 237, 0.06);
+}
+
+/* Table wrapper */
+.light-theme .table-wrapper {
+  background: rgba(124, 58, 237, 0.02);
+  border-color: rgba(124, 58, 237, 0.08);
+}
+
+/* Search */
+.light-theme .search-container svg {
+  color: #64748b;
+}
+
+/* Stats */
+.light-theme .stat-box {
+  background: rgba(124, 58, 237, 0.03);
+}
+
+.light-theme .stat-label {
+  color: #475569;
+}
+
+.light-theme .stat-val {
+  color: #1e1b4b;
+}
+
+.light-theme .stat-val-bono { color: #7c3aed; }
+.light-theme .stat-val-domingo { color: #059669; }
+.light-theme .stat-val-feriado { color: #7c3aed; }
+.light-theme .stat-val-ausencia { color: #dc2626; }
+
+/* Badges */
+.light-theme .badge-bono {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.25);
+  color: #7c3aed;
+}
+
+.light-theme .badge-domingo {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: rgba(5, 150, 105, 0.25);
+  color: #059669;
+}
+
+.light-theme .badge-feriado {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.25);
+  color: #7c3aed;
+}
+
+.light-theme .badge-ausencia-j {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #2563eb;
+}
+
+.light-theme .badge-ausencia-i {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #dc2626;
+}
+
+/* Feriado tag */
+.light-theme .feriado-tag {
+  background: rgba(124, 58, 237, 0.08) !important;
+  border-color: rgba(124, 58, 237, 0.2) !important;
+  color: #7c3aed !important;
+}
+
+/* Feriados box background */
+.light-theme .feriados-tags {
+  background: rgba(124, 58, 237, 0.03);
+  border-color: rgba(124, 58, 237, 0.08);
+}
+
+/* Empty state */
+.light-theme .empty-state {
+  color: #475569;
+}
+
+.light-theme .empty-state svg {
+  color: #a78bfa;
+}
+
+.light-theme .empty-state h3 {
+  color: #334155;
+}
+
+/* Btn primary disabled */
+.light-theme .btn-primary:disabled {
+  background: #e2e0f5;
+  color: #a5a3c9;
+}
+
+/* Btn action delete */
+.light-theme .btn-action-delete {
+  color: #94a3b8;
+}
+
+/* Toast */
+.light-theme .toast {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1e1b4b;
+  border-color: rgba(124, 58, 237, 0.1);
+}
+
+/* Custom dropdown trigger hover */
+.light-theme .custom-dropdown-trigger:hover {
+  border-color: var(--secondary) !important;
+  box-shadow: 0 0 10px rgba(8, 145, 178, 0.15);
+}
+
+/* Custom dropdown menu */
+.light-theme .custom-dropdown-menu {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(124, 58, 237, 0.1) !important;
+  box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.12) !important;
+}
+
+.light-theme .custom-dropdown-item:hover {
+  background: rgba(124, 58, 237, 0.06) !important;
+  color: #1e1b4b !important;
+}
+
+/* Logout button override */
+.light-theme header {
+  border-color: rgba(124, 58, 237, 0.08);
+}
+
+.light-theme header::before {
+  background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+}
+
+/* History banner */
+.light-theme .history-banner {
+  border-color: rgba(124, 58, 237, 0.2) !important;
+  background: rgba(124, 58, 237, 0.04) !important;
+}
+
+.light-theme .history-banner-content {
+  color: #7c3aed !important;
+}
+
+/* Feriado summary box */
+.light-theme .feriado-summary-box {
+  color: #7c3aed !important;
+  background: rgba(124, 58, 237, 0.04) !important;
+  border-color: rgba(124, 58, 237, 0.12) !important;
+}
+
+/* Feriado text (inline yellow -> purple) */
+.light-theme .feriado-text {
+  color: #7c3aed !important;
+}
+
+/* ===== Theme Switch Button ===== */
 
 .theme-switch-btn {
   position: fixed;
@@ -945,11 +1200,9 @@ td {
 }
 
 .theme-switch-btn .moon-icon {
-  color: #c084fc;
+  color: #7c3aed;
 }
 
 .light-theme .theme-switch-btn {
-  color: #334155;
+  color: #475569;
 }
-
-

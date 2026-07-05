@@ -49,7 +49,7 @@ function CustomDropdown({ label, value, options, onChange, disabled }) {
         onClick={() => !disabled && setIsOpen(!isOpen)}
         style={{
           width: '100%',
-          background: disabled ? 'rgba(15, 23, 42, 0.4)' : 'rgba(15, 23, 42, 0.8)',
+          background: disabled ? 'var(--bg-input, rgba(15, 23, 42, 0.4))' : 'var(--bg-input, rgba(15, 23, 42, 0.8))',
           border: '1px solid var(--border-glass)',
           borderRadius: '10px',
           padding: '0.75rem 1rem',
@@ -959,7 +959,7 @@ function App() {
 
       {/* Banner de Modo Lectura / Historial */}
       {viewingHistoryId && (
-        <div className="glass-card" style={{
+        <div className="glass-card history-banner" style={{
           padding: '1rem 1.5rem',
           border: '1px solid rgba(245, 158, 11, 0.3)',
           background: 'rgba(245, 158, 11, 0.05)',
@@ -969,7 +969,7 @@ function App() {
           animation: 'fadeIn 0.3s ease',
           borderRadius: '16px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#fbbf24' }}>
+          <div className="history-banner-content" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#fbbf24' }}>
             <Info size={20} />
             <div>
               <strong style={{ display: 'block', fontSize: '0.9rem' }}>Visualizando Historial Guardado</strong>
@@ -1054,7 +1054,7 @@ function App() {
                           <strong>{monthName} {item.year}</strong> - Q{item.quincena}
                         </td>
                         <td>
-                          <span style={{ fontSize: '0.8rem', color: '#fbbf24' }}>
+                          <span className="feriado-text" style={{ fontSize: '0.8rem', color: '#fbbf24' }}>
                             {item.feriados && item.feriados.length > 0
                               ? item.feriados.map(d => d.split('-')[2]).join(', ')
                               : 'Ninguno'
@@ -1129,7 +1129,7 @@ function App() {
                   max="2100"
                   disabled={viewingHistoryId !== null}
                   style={{
-                    background: viewingHistoryId !== null ? 'rgba(15, 23, 42, 0.4)' : 'rgba(15, 23, 42, 0.8)',
+                    background: viewingHistoryId !== null ? 'var(--bg-input, rgba(15, 23, 42, 0.4))' : 'var(--bg-input, rgba(15, 23, 42, 0.8))',
                     cursor: viewingHistoryId !== null ? 'not-allowed' : 'text'
                   }}
                 />
@@ -1191,7 +1191,7 @@ function App() {
                     {file.size > 0 ? (
                       <p>{(file.size / 1024).toFixed(1)} KB</p>
                     ) : (
-                      <p style={{ color: '#fbbf24', fontWeight: '500' }}>Registro Histórico</p>
+                      <p className="feriado-text" style={{ color: '#fbbf24', fontWeight: '500' }}>Registro Histórico</p>
                     )}
                   </div>
                 </div>
@@ -1281,7 +1281,7 @@ function App() {
                 maxHeight: '120px',
                 overflowY: 'auto',
                 padding: '0.5rem',
-                background: 'rgba(0, 0, 0, 0.2)',
+                background: 'var(--bg-feriados-box, rgba(0, 0, 0, 0.2))',
                 borderRadius: '10px',
                 border: '1px solid var(--border-glass)'
               }}>
@@ -1332,7 +1332,7 @@ function App() {
                 Si un colaborador trabaja en estas fechas, computará "FERIADO".
               </p>
               {activeFeriadosInCorte.length > 0 && (
-                <div style={{ fontSize: '0.75rem', color: '#fbbf24', background: 'rgba(245, 158, 11, 0.05)', padding: '0.5rem', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.15)' }}>
+                <div className="feriado-summary-box" style={{ fontSize: '0.75rem', color: '#fbbf24', background: 'rgba(245, 158, 11, 0.05)', padding: '0.5rem', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.15)' }}>
                   <strong>Feriados en este corte:</strong> {activeFeriadosInCorte.map(d => d.split('-')[2]).join(', ')}
                 </div>
               )}
