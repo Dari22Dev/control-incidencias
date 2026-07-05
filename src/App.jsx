@@ -12,7 +12,9 @@ import {
   AlertCircle,
   CheckCircle2,
   ShieldAlert,
-  Info
+  Info,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { processIncidencias } from './utils/calculator';
 
@@ -51,7 +53,7 @@ function CustomDropdown({ label, value, options, onChange, disabled }) {
           border: '1px solid var(--border-glass)',
           borderRadius: '10px',
           padding: '0.75rem 1rem',
-          color: '#ffffff',
+          color: 'var(--color-input, #ffffff)',
           fontFamily: 'inherit',
           fontSize: '0.9rem',
           outline: 'none',
@@ -85,7 +87,7 @@ function CustomDropdown({ label, value, options, onChange, disabled }) {
             top: 'calc(100% + 5px)',
             left: 0,
             width: '100%',
-            background: 'rgba(15, 23, 42, 0.95)',
+            background: 'var(--bg-dropdown, rgba(15, 23, 42, 0.95))',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             border: '1px solid var(--border-glass)',
@@ -107,7 +109,7 @@ function CustomDropdown({ label, value, options, onChange, disabled }) {
               }}
               style={{
                 padding: '0.6rem 1rem',
-                color: opt.value === value ? 'var(--secondary)' : '#ffffff',
+                color: opt.value === value ? 'var(--secondary)' : 'var(--text-dropdown, #ffffff)',
                 background: opt.value === value ? 'rgba(6, 182, 212, 0.1)' : 'transparent',
                 fontSize: '0.85rem',
                 cursor: 'pointer',
@@ -192,6 +194,22 @@ function Footer() {
 }
 
 function App() {
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+  };
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+  }, [theme]);
+
   const today = new Date();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -783,6 +801,9 @@ function App() {
   if (!authToken) {
     return (
       <div className="container" style={{ minHeight: '100vh', justifyContent: 'center', alignItems: 'center' }}>
+        <button onClick={toggleTheme} className="theme-switch-btn" aria-label="Cambiar tema">
+          {theme === 'dark' ? <Sun className="sun-icon" size={20} /> : <Moon className="moon-icon" size={20} />}
+        </button>
         <div className="orb orb-1" style={{ top: '30%', left: '30%' }}></div>
         <div className="orb orb-2" style={{ bottom: '30%', right: '30%' }}></div>
 
@@ -800,7 +821,7 @@ function App() {
             }}>
               <FileSpreadsheet size={32} color="#ffffff" />
             </div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(90deg, #fff, #cbd5e1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '0.25rem' }}>Control de Incidencias</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', background: 'var(--title-gradient, linear-gradient(90deg, #fff, #cbd5e1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '0.25rem' }}>Control de Incidencias</h2>
             <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Ingresa tus credenciales maestras para continuar</p>
           </div>
 
@@ -869,6 +890,9 @@ function App() {
 
   return (
     <div className="container">
+      <button onClick={toggleTheme} className="theme-switch-btn" aria-label="Cambiar tema">
+        {theme === 'dark' ? <Sun className="sun-icon" size={20} /> : <Moon className="moon-icon" size={20} />}
+      </button>
       {/* Background Orbs */}
       <div className="orb orb-1"></div>
       <div className="orb orb-2"></div>
