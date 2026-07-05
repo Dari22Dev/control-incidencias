@@ -798,7 +798,7 @@ function App() {
               alignItems: 'center',
               marginBottom: '1rem'
             }}>
-              <ShieldAlert size={32} style={{ color: '#fff' }} />
+              <FileSpreadsheet size={32} color="#ffffff" />
             </div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(90deg, #fff, #cbd5e1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '0.25rem' }}>Control de Incidencias</h2>
             <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Ingresa tus credenciales maestras para continuar</p>
