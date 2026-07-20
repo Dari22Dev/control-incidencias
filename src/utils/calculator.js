@@ -1,13 +1,13 @@
 /**
  * Normaliza y mapea la sucursal del Excel de entrada a los nombres de las pestañas de salida.
- * @param {string} sucursalRaw 
+ * @param {string} sucursalRaw
  * @returns {string}
  */
 export function determineSucursal(sucursalRaw) {
   if (!sucursalRaw) return 'SM COSTAZUL'; // Default fallback
   const normalized = sucursalRaw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
-  if (normalized.includes('sigo+2') || normalized.includes('sigo + 2') || normalized.includes('bodegon') || normalized.includes('bod')) {
+
+  if (normalized.includes('sigo') || normalized.includes('bodegon') || normalized.includes('bod')) {
     return 'BODEGÓN COSTAZUL';
   } else if (normalized.includes('happy shack') && (normalized.includes('ii') || normalized.includes('2'))) {
     return 'HAPPY SHACK II';
@@ -16,7 +16,7 @@ export function determineSucursal(sucursalRaw) {
   } else if (normalized.includes('supermarket') || normalized.includes('sm') || normalized.includes('costazul')) {
     return 'SM COSTAZUL';
   }
-  
+
   return 'SM COSTAZUL'; // Default fallback
 }
 
@@ -39,10 +39,27 @@ const MONTH_MAP = {
 };
 
 /**
+ * Normaliza texto (minúsculas, sin tildes, sin espacios repetidos, sin punto final)
+ * para comparar de forma estable nombres de columna y conceptos de asistencia.
+ * @param {any} v
+ * @returns {string}
+ */
+function normalizeText(v) {
+  if (v === undefined || v === null) return '';
+  return String(v)
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\.$/, '');
+}
+
+/**
  * Parsea una celda de fecha del encabezado del Excel.
  * Soporta objetos Date nativos, números seriales de Excel y cadenas de texto como "1 Jun", "16-Jun".
- * @param {any} cell 
- * @param {number} year 
+ * @param {any} cell
+ * @param {number} year
  * @returns {Date|null}
  */
 export function parseHeaderDate(cell, year, defaultMonthIdx = null) {
@@ -50,7 +67,7 @@ export function parseHeaderDate(cell, year, defaultMonthIdx = null) {
 
   // 1. Si ya es un objeto Date
   if (cell instanceof Date) {
-    // Si ya es un objeto Date, ajustamos las horas para posicionar la fecha al mediodía local.
+    // Ajustamos las horas para posicionar la fecha al mediodía local.
     // Esto evita que diferencias de zona horaria (UTC vs Local) desplacen el día al anterior o siguiente.
     const d = new Date(cell.getTime());
     if (d.getHours() < 6) {
@@ -71,7 +88,7 @@ export function parseHeaderDate(cell, year, defaultMonthIdx = null) {
       }
       return null;
     }
-    
+
     // Si es un número serial de Excel (ej: 46174 para Jun 1, 2026)
     const date = new Date((cell - 25569) * 86400 * 1000);
     // Ajustar por zona horaria local para evitar descalces de día
@@ -85,9 +102,9 @@ export function parseHeaderDate(cell, year, defaultMonthIdx = null) {
     if (trimmed === '') return null;
 
     // Excluir nombres de días de la semana (LUN, MAR, MON, TUE, etc.) para evitar falsos positivos en Date.parse
-    const cleanLower = trimmed.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const cleanLower = normalizeText(trimmed);
     const weekDays = [
-      'lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom', 
+      'lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom',
       'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo',
       'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun',
       'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
@@ -112,7 +129,7 @@ export function parseHeaderDate(cell, year, defaultMonthIdx = null) {
       const mPart = parts[1].trim();
       const monthVal = parseInt(mPart, 10);
       let monthIdx = -1;
-      
+
       if (!isNaN(monthVal)) {
         monthIdx = monthVal - 1;
       } else {
@@ -120,7 +137,7 @@ export function parseHeaderDate(cell, year, defaultMonthIdx = null) {
         const monthStr = mPart.toLowerCase().slice(0, 3);
         monthIdx = MONTH_MAP[monthStr];
       }
-      
+
       if (!isNaN(day) && monthIdx !== undefined && monthIdx >= 0 && monthIdx < 12 && day >= 1 && day <= 31) {
         let parsedYear = year;
         if (parts.length === 3) {
@@ -146,7 +163,7 @@ export function parseHeaderDate(cell, year, defaultMonthIdx = null) {
         return new Date(year, monthIdx, day);
       }
     }
-    
+
     // D. Probar parsear directo con Date.parse (como último recurso)
     const parsedTime = Date.parse(`${trimmed} ${year}`);
     if (!isNaN(parsedTime)) {
@@ -159,7 +176,7 @@ export function parseHeaderDate(cell, year, defaultMonthIdx = null) {
 
 /**
  * Formatea una fecha como "DD MM YYYY" en texto.
- * @param {Date} date 
+ * @param {Date} date
  * @returns {string}
  */
 export function formatDateString(date) {
@@ -170,34 +187,23 @@ export function formatDateString(date) {
 }
 
 /**
- * Determina si un estatus diario indica que el empleado trabajó.
- * @param {string} status 
+ * Determina si un estatus diario indica que el empleado trabajó (uso genérico externo).
+ * La lógica interna de processIncidencias usa CONCEPT_RULES en su lugar.
+ * @param {string} status
  * @returns {boolean}
  */
 export function isWorkedStatus(status) {
-  if (!status) return false;
-  const clean = status.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
-  const workedStatuses = [
-    'presente a tiempo',
-    'presente cierre a tiempo',
-    'presente apertura a tiempo',
-    'redoble',
-    'redoble especial',
-    'asistio especial',
-    '1 hora extra',
-    '2 hora extra'
-  ];
-  
-  return workedStatuses.some(ws => {
-    const cleanWs = ws.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return clean.includes(cleanWs);
-  });
+  const norm = normalizeText(status);
+  if (!norm) return false;
+  for (const rules of Object.values(CONCEPT_RULES)) {
+    if (rules[norm] && !rules[norm].ausencia) return true;
+  }
+  return false;
 }
 
 /**
  * Retorna la fecha local formateada como YYYY-MM-DD para evitar desfases de zona horaria.
- * @param {Date} date 
+ * @param {Date} date
  * @returns {string}
  */
 export function getLocalISODate(date) {
@@ -208,9 +214,77 @@ export function getLocalISODate(date) {
   return `${y}-${m}-${d}`;
 }
 
+// Posiciones de columna fijas del layout vigente (confirmado sobre consolidado_incidencias_1Qjulio.xlsx):
+// CEDULA | COD MELÉ | NOMBRES Y APELLIDOS | CARGO | DEPARTAMENTO | SUCURSAL | TURNO | DIAS LIBRES | <fechas...>
+const COL = {
+  CEDULA: 0,
+  CODIGO: 1,
+  NOMBRE: 2,
+  CARGO: 3,
+  DEPARTAMENTO: 4,
+  SUCURSAL: 5,
+  TURNO: 6,
+  DIAS_LIBRES: 7
+};
+
+// Conceptos que nunca generan incidencia (no cuentan para nada), iguales en todas las sucursales.
+const SKIP_CONCEPTS = new Set(['permiso', 'reposo', 'formaciones', 'dia libre', 'vacaciones']);
+
+// Reglas de bono nocturno / domingo-feriado / ausencia por sucursal y concepto (texto normalizado).
+// bono: valor fijo de bono nocturno.
+// bonoWeekday/bonoSunday: valor de bono nocturno distinto si el día cae domingo.
+// domingoFeriado: true => genera además incidencia DOMINGO (si aplica) y FERIADO (si la fecha está en feriadosList).
+// ausencia: nombre del tipo de incidencia de ausencia (valor fijo 1, no genera bono ni domingo/feriado).
+const CONCEPT_RULES = {
+  'SM COSTAZUL': {
+    'presente apertura a tiempo': { bono: 0, domingoFeriado: true },
+    'presente cierre a tiempo': { bono: 3, domingoFeriado: true },
+    'presente cierre': { bono: 3, domingoFeriado: true },
+    'presente a tiempo': { bono: 2, domingoFeriado: true },
+    'asistio': { bono: 2, domingoFeriado: true },
+    'redoble': { bono: 3, domingoFeriado: true },
+    'redoble especial': { bono: 3, domingoFeriado: true },
+    'ausencia injustificada': { ausencia: 'AUSENCIA INJUSTIFICADA' },
+    'falta injustificada': { ausencia: 'AUSENCIA INJUSTIFICADA' },
+    'ausencia justificada': { ausencia: 'AUSENCIA JUSTIFICADA' },
+    'falta justificada': { ausencia: 'AUSENCIA JUSTIFICADA' }
+  },
+  'BODEGÓN COSTAZUL': {
+    'presente a tiempo': { bonoWeekday: 2, bonoSunday: 1, domingoFeriado: true },
+    'presente cierre a tiempo': { bonoWeekday: 2, bonoSunday: 1, domingoFeriado: true },
+    'asistio': { bono: 2, domingoFeriado: true },
+    'ausencia injustificada': { ausencia: 'AUSENCIA INJUSTIFICADA' },
+    'falta injustificada': { ausencia: 'AUSENCIA INJUSTIFICADA' },
+    'ausencia justificada': { ausencia: 'AUSENCIA JUSTIFICADA' },
+    'falta justificada': { ausencia: 'AUSENCIA JUSTIFICADA' }
+  },
+  'HAPPY SHACK': {
+    'presente apertura a tiempo': { bono: 0, domingoFeriado: true },
+    'presente cierre a tiempo': { bono: 3, domingoFeriado: true },
+    '1 hora extra': { bono: 2, domingoFeriado: true },
+    '2 hora extra': { bono: 3, domingoFeriado: true },
+    'redoble': { bono: 3, domingoFeriado: true },
+    'ausencia injustificada': { ausencia: 'AUSENCIA INJUSTIFICADA' },
+    'falta injustificada': { ausencia: 'AUSENCIA INJUSTIFICADA' },
+    'ausencia justificada': { ausencia: 'AUSENCIA JUSTIFICADA' },
+    'falta justificada': { ausencia: 'AUSENCIA JUSTIFICADA' }
+  },
+  'HAPPY SHACK II': {
+    'presente apertura a tiempo': { bono: 0, domingoFeriado: true },
+    'presente cierre a tiempo': { bono: 3, domingoFeriado: true },
+    '1 hora extra': { bono: 2, domingoFeriado: true },
+    '2 hora extra': { bono: 3, domingoFeriado: true },
+    'redoble': { bono: 3, domingoFeriado: true },
+    'ausencia injustificada': { ausencia: 'AUSENCIA INJUSTIFICADA' },
+    'falta injustificada': { ausencia: 'AUSENCIA INJUSTIFICADA' },
+    'ausencia justificada': { ausencia: 'AUSENCIA JUSTIFICADA' },
+    'falta justificada': { ausencia: 'AUSENCIA JUSTIFICADA' }
+  }
+};
+
 /**
  * Procesa la matriz de datos crudos de Excel y calcula las incidencias de cada colaborador.
- * 
+ *
  * @param {Array<Array<any>>} rawRows - Filas del Excel leídas como arreglo de arreglos.
  * @param {number} year - Año de procesamiento seleccionado por el usuario.
  * @param {number|null|Array<string>} monthIdx - Índice del mes (0-11) o lista de feriados (firma anterior).
@@ -229,7 +303,6 @@ export function processIncidencias(rawRows, year, monthIdx = null, quincena = nu
     quincena = null;
   }
 
-  // LOG DEPURACIÓN INICIAL
   console.log('=== DEBUG PROCESAR INCIDENCIAS ===');
   console.log('Año UI:', year, 'Mes UI (0-11):', monthIdx, 'Quincena UI:', quincena);
   console.log('Feriados registrados:', feriadosList);
@@ -246,34 +319,47 @@ export function processIncidencias(rawRows, year, monthIdx = null, quincena = nu
     return result;
   }
 
-  // 1. Encontrar la fila de cabecera principal (debe tener "COD. MELE" en la columna A)
+  // 1. Localizar la fila de cabecera buscando "COD MEL" (con o sin punto/tilde) en cualquiera
+  //    de las primeras columnas, ya que su posición exacta puede variar entre archivos.
   let headerRowIdx = -1;
   for (let i = 0; i < rawRows.length; i++) {
-    const colA = String(rawRows[i][0] || '').trim().toUpperCase();
-    if (colA.includes('COD. MELE') || colA.includes('CODIGO') || colA.includes('COD.')) {
-      headerRowIdx = i;
-      break;
+    const row = rawRows[i];
+    if (!row) continue;
+    for (let c = 0; c < Math.min(row.length, 12); c++) {
+      const norm = normalizeText(row[c]);
+      if (norm.includes('cod mel') || norm === 'codigo') {
+        headerRowIdx = i;
+        break;
+      }
     }
+    if (headerRowIdx !== -1) break;
   }
 
   if (headerRowIdx === -1) {
-    console.error('Cabecera "COD. MELE" no encontrada en columna A en ninguna fila.');
-    throw new Error('No se encontró la cabecera "COD. MELE" en la primera columna del archivo.');
+    console.error('Cabecera "COD MELÉ" no encontrada en ninguna fila.');
+    throw new Error('No se encontró la cabecera "COD MELÉ" en el archivo.');
   }
 
   console.log('Fila cabecera encontrada en índice:', headerRowIdx);
   const headerRow = rawRows[headerRowIdx];
-  
-  // 2. Determinar qué fila contiene las fechas (puede ser la cabecera misma, la fila superior o la inferior)
+
+  // 2. Localizar el inicio de las columnas de fecha: primera columna después de "DIAS LIBRES".
+  let dateStartCol = COL.DIAS_LIBRES + 1;
+  for (let c = 0; c < headerRow.length; c++) {
+    if (normalizeText(headerRow[c]).includes('dias libres')) {
+      dateStartCol = c + 1;
+      break;
+    }
+  }
+
+  // 3. Determinar la fila que realmente contiene las fechas (normalmente la misma fila de cabecera).
   let dateRow = null;
   let dateRowIdx = -1;
-
   const candidateRowIndices = [headerRowIdx, headerRowIdx + 1, headerRowIdx - 1];
   for (const idx of candidateRowIndices) {
     if (idx >= 0 && idx < rawRows.length) {
       const row = rawRows[idx];
-      // Probar si el primer valor de fecha (columna F / índice 5) es parseable como fecha
-      const cellVal = row[5];
+      const cellVal = row[dateStartCol];
       if (cellVal !== undefined && cellVal !== null && cellVal !== '') {
         const parsed = parseHeaderDate(cellVal, year, monthIdx);
         if (parsed) {
@@ -284,21 +370,15 @@ export function processIncidencias(rawRows, year, monthIdx = null, quincena = nu
       }
     }
   }
-
   if (!dateRow) {
-    console.warn('No se detectó fila de fecha automáticamente. Usando fila inferior por defecto.');
-    dateRowIdx = headerRowIdx + 1;
-    if (dateRowIdx >= rawRows.length) {
-      throw new Error('El archivo no contiene la fila de fechas debajo de la cabecera.');
-    }
-    dateRow = rawRows[dateRowIdx];
+    console.warn('No se detectó fila de fecha automáticamente. Usando la fila de cabecera.');
+    dateRow = headerRow;
+    dateRowIdx = headerRowIdx;
   }
-  console.log('Fila de fechas detectada en índice:', dateRowIdx);
+  console.log('Fila de fechas detectada en índice:', dateRowIdx, '| Columna de inicio de fechas:', dateStartCol);
 
-  // 2. Extraer las fechas de las columnas de asistencia (a partir de la columna F / índice 5) y filtrar por el corte quincenal
+  // 4. Extraer las fechas válidas de las columnas de asistencia, filtradas por el corte quincenal.
   const columnDates = [];
-  
-  // Límites del corte quincenal
   let startDay = null;
   let endDay = null;
   if (monthIdx !== null && quincena !== null) {
@@ -307,170 +387,103 @@ export function processIncidencias(rawRows, year, monthIdx = null, quincena = nu
       endDay = 15;
     } else if (quincena === 2) {
       startDay = 16;
-      endDay = new Date(year, monthIdx + 1, 0).getDate(); // Último día del mes seleccionado
+      endDay = new Date(year, monthIdx + 1, 0).getDate();
     }
   }
-  console.log(`Límites de días calculados: ${startDay} al ${endDay}`);
 
-  for (let col = 5; col < headerRow.length; col++) {
+  for (let col = dateStartCol; col < dateRow.length; col++) {
     const dateCell = dateRow[col];
     if (dateCell === undefined || dateCell === '') continue;
     const parsedDate = parseHeaderDate(dateCell, year, monthIdx);
-    
-    if (col < 25) {
-      console.log(`Col ${col} | Celda original: ${JSON.stringify(dateCell)} | Tipo: ${typeof dateCell} | Parseado:`, parsedDate ? parsedDate.toDateString() : 'null');
-    }
-
     if (!parsedDate) continue;
 
-    // Si se especificó el corte (mes y quincena), verificar que la fecha caiga en dicho rango
     if (monthIdx !== null && quincena !== null) {
-      const parsedYear = parsedDate.getFullYear();
-      const parsedMonth = parsedDate.getMonth();
-      const parsedDay = parsedDate.getDate();
-
-      const yearMatches = parsedYear === year;
-      const monthMatches = parsedMonth === monthIdx;
-      const dayMatches = parsedDay >= startDay && parsedDay <= endDay;
-
-      if (!yearMatches || !monthMatches || !dayMatches) {
-        if (col < 25) {
-          console.log(`  -> Col ${col} FILTRADA. Coincide Año: ${yearMatches} (${parsedYear} vs ${year}), Coincide Mes: ${monthMatches} (${parsedMonth} vs ${monthIdx}), Coincide Día: ${dayMatches} (${parsedDay})`);
-        }
-        continue; // Omitir columnas que no corresponden al corte
-      }
+      const yearMatches = parsedDate.getFullYear() === year;
+      const monthMatches = parsedDate.getMonth() === monthIdx;
+      const dayMatches = parsedDate.getDate() >= startDay && parsedDate.getDate() <= endDay;
+      if (!yearMatches || !monthMatches || !dayMatches) continue;
     }
 
-    columnDates.push({
-      colIdx: col,
-      date: parsedDate,
-      originalText: dateCell
-    });
+    columnDates.push({ colIdx: col, date: parsedDate });
   }
 
   console.log('Total columnas de fecha válidas que pasaron filtros:', columnDates.length);
-  if (columnDates.length > 0) {
-    console.log('Fechas seleccionadas:', columnDates.map(c => c.date.toDateString()));
-  }
 
-  // Set de feriados formateados como 'YYYY-MM-DD' para búsquedas rápidas
   const feriadosSet = new Set(feriadosList);
-  const sucursalesOrder = ['SM COSTAZUL', 'BODEGÓN COSTAZUL', 'HAPPY SHACK', 'HAPPY SHACK II'];
+  const unrecognizedConcepts = new Set();
 
-  // 3. Procesar las filas agrupando por: Sucursal -> Día (Cronológico) -> Empleado
-  sucursalesOrder.forEach(sucursalKey => {
-    columnDates.forEach(colDate => {
-      for (let r = Math.max(headerRowIdx, dateRowIdx) + 1; r < rawRows.length; r++) {
-        const row = rawRows[r];
-        if (!row) continue;
-        
-        // Asegurar que la fila tiene al menos un código de empleado
-        const employeeCode = String(row[0] || '').trim();
-        if (!employeeCode || employeeCode === '') continue; // Fila vacía o sin código
+  // 5. Recorrer cada fila de empleado una sola vez y, dentro de ella, cada columna de fecha.
+  for (let r = Math.max(headerRowIdx, dateRowIdx) + 1; r < rawRows.length; r++) {
+    const row = rawRows[r];
+    if (!row) continue;
 
-        const rawSucursal = String(row[3] || '').trim();
-        const mappedSucursal = determineSucursal(rawSucursal);
-        
-        // Filtrar por la sucursal actual del bucle
-        if (mappedSucursal !== sucursalKey) continue;
+    const employeeCode = String(row[COL.CODIGO] || '').trim();
+    if (!employeeCode) continue; // Fila vacía o sin código
 
-        const cedula = String(row[1] || '').trim();
-        const employeeName = String(row[2] || '').trim();
-        const cargo = String(row[4] || '').trim();
+    const rawSucursal = String(row[COL.SUCURSAL] || '').trim();
+    const mappedSucursal = determineSucursal(rawSucursal);
+    if (!result[mappedSucursal]) continue; // Sucursal desconocida, seguridad extra
 
-        const cellValue = String(row[colDate.colIdx] || '').trim();
-        const cleanValue = cellValue.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (!cleanValue) continue; // Celda vacía
+    const cedula = String(row[COL.CEDULA] || '').trim();
+    const employeeName = String(row[COL.NOMBRE] || '').trim();
+    const cargo = String(row[COL.CARGO] || '').trim();
+    const rules = CONCEPT_RULES[mappedSucursal];
 
-        const formattedDate = formatDateString(colDate.date);
-        const isoDateString = getLocalISODate(colDate.date); // 'YYYY-MM-DD' en hora local
+    for (const colDate of columnDates) {
+      const cellValue = String(row[colDate.colIdx] || '').trim();
+      if (!cellValue) continue;
 
-        // Array de incidencias encontradas para este empleado en esta fecha
-        const dailyIncidences = [];
+      const norm = normalizeText(cellValue);
+      if (!norm || SKIP_CONCEPTS.has(norm)) continue;
 
-        // --- CÁLCULO DE BONO NOCTURNO ---
+      const rule = rules[norm];
+      if (!rule) {
+        unrecognizedConcepts.add(`${mappedSucursal} :: "${cellValue}"`);
+        continue;
+      }
+
+      const formattedDate = formatDateString(colDate.date);
+      const isoDateString = getLocalISODate(colDate.date);
+      const isSunday = colDate.date.getDay() === 0;
+      const dailyIncidences = [];
+
+      if (rule.ausencia) {
+        dailyIncidences.push({ type: rule.ausencia, value: 1 });
+      } else {
         let bonoValue = 0;
-        
-        // Regla General: Redobles y Asistió Especial siempre valen 3 de bono nocturno
-        if (cleanValue.includes('redoble') || cleanValue.includes('asistio especial')) {
-          bonoValue = 3;
-        } else {
-          switch (mappedSucursal) {
-            case 'SM COSTAZUL':
-              if (cleanValue.includes('presente cierre a tiempo')) {
-                bonoValue = 3;
-              }
-              break;
-            case 'BODEGÓN COSTAZUL':
-              if (cleanValue.includes('presente cierre a tiempo') || cleanValue.includes('presente a tiempo')) {
-                bonoValue = 2;
-              }
-              break;
-            case 'HAPPY SHACK':
-            case 'HAPPY SHACK II':
-              if (cleanValue.includes('presente cierre a tiempo') || cleanValue.includes('2 hora extra')) {
-                bonoValue = 3;
-              } else if (cleanValue.includes('1 hora extra')) {
-                bonoValue = 2;
-              }
-              break;
-          }
+        if (rule.bonoWeekday !== undefined) {
+          bonoValue = isSunday ? rule.bonoSunday : rule.bonoWeekday;
+        } else if (rule.bono !== undefined) {
+          bonoValue = rule.bono;
         }
-
         if (bonoValue > 0) {
-          dailyIncidences.push({
-            type: 'BONO NOCTURNO',
-            value: bonoValue
-          });
+          dailyIncidences.push({ type: 'BONO NOCTURNO', value: bonoValue });
         }
-
-        // --- CÁLCULO DE DOMINGO ---
-        const isSunday = colDate.date.getDay() === 0;
-        if (isSunday && isWorkedStatus(cellValue)) {
-          dailyIncidences.push({
-            type: 'DOMINGO',
-            value: 1
-          });
-        }
-
-        // --- CÁLCULO DE FERIADO ---
-        if (feriadosSet.has(isoDateString) && isWorkedStatus(cellValue)) {
-          dailyIncidences.push({
-            type: 'FERIADO',
-            value: 1
-          });
-        }
-
-        // --- CÁLCULO DE AUSENCIAS ---
-        if (cleanValue.includes('ausencia injustificada') || cleanValue.includes('falta injustificada')) {
-          dailyIncidences.push({
-            type: 'AUSENCIA INJUSTIFICADA',
-            value: 1
-          });
-        } else if (cleanValue.includes('ausencia justificada') || cleanValue.includes('falta justificada')) {
-          dailyIncidences.push({
-            type: 'AUSENCIA JUSTIFICADA',
-            value: 1
-          });
-        }
-
-        // Guardar las incidencias encontradas en la sucursal destino
-        for (const inc of dailyIncidences) {
-          result[mappedSucursal].push({
-            employeeCode,
-            employeeName,
-            cedula,
-            cargo,
-            originalSucursal: rawSucursal,
-            incidenceType: inc.type,
-            value: inc.value,
-            dateString: formattedDate,
-            originalStatus: cellValue
-          });
+        if (rule.domingoFeriado) {
+          if (isSunday) dailyIncidences.push({ type: 'DOMINGO', value: 1 });
+          if (feriadosSet.has(isoDateString)) dailyIncidences.push({ type: 'FERIADO', value: 1 });
         }
       }
-    });
-  });
+
+      for (const inc of dailyIncidences) {
+        result[mappedSucursal].push({
+          employeeCode,
+          employeeName,
+          cedula,
+          cargo,
+          originalSucursal: rawSucursal,
+          incidenceType: inc.type,
+          value: inc.value,
+          dateString: formattedDate,
+          originalStatus: cellValue
+        });
+      }
+    }
+  }
+
+  if (unrecognizedConcepts.size > 0) {
+    console.warn('Conceptos no reconocidos (no generaron incidencia):', Array.from(unrecognizedConcepts));
+  }
 
   return result;
 }
